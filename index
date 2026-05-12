@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retail Bank System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #121212;
+            --text-muted: #6c757d;
+            --accent: #0052ff;
+            --accent-hover: #0041cc;
+            --border: #e9ecef;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            padding: 60px 20px;
+        }
+
+        header {
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Сетка услуг */
+        #services-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 60px;
+        }
+
+        .service-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent);
+        }
+
+        .service-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .service-rate {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .service-desc {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-top: 12px;
+        }
+
+        /* Форма */
+        .application-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        h3 { font-size: 1.5rem; margin-bottom: 25px; }
+
+        .form-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        input {
+            padding: 14px 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 350px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: var(--accent); }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: var(--accent-hover); }
+
+        #status {
+            margin-top: 20px;
+            font-weight: 500;
+            color: var(--accent);
+            min-height: 24px;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.8rem; }
+            .application-section { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Retail Bank</h1>
+            <p class="subtitle">Информационная система управления розничными услугами</p>
+        </header>
+        
+        <div id="services-list">
+            <!-- Сюда подгрузятся данные -->
+        </div>
+
+        <section class="application-section">
+            <h3>Оставить заявку на продукт</h3>
+            <div class="form-group">
+                <input type="text" id="clientName" placeholder="Введите ваше ФИО">
+                <button class="btn" onclick="submitApplication()">Отправить запрос</button>
+            </div>
+            <div id="status"></div>
+        </section>
+    </div>
+
+    <script>
+        // Данные подключения
+        const SUPABASE_URL = 'https://kskbewcuerghaapfcwoy.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtza2Jld2N1ZXJnaGFhcGZjd295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1NzM2MDUsImV4cCI6MjA5NDE0OTYwNX0.lkrqbqdOjwB6P-q_Ny_XtoquyuARBBY3MF6WY6O72-c';
+        
+        // Исправленная инициализация
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function loadServices() {
+            const list = document.getElementById('services-list');
+            const { data, error } = await supabaseClient.from('services').select('*');
+            
+            if (error) {
+                list.innerHTML = '<p>Ошибка загрузки данных</p>';
+                return;
+            }
+            
+            list.innerHTML = data.map(s => `
+                <div class="service-card">
+                    <div>
+                        <span class="service-rate">Ставка от ${s.interest_rate}%</span>
+                        <span class="service-name">${s.name}</span>
+                        <p class="service-desc">${s.description}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function submitApplication() {
+            const name = document.getElementById('clientName').value;
+            const statusEl = document.getElementById('status');
+            
+            if (!name) {
+                statusEl.style.color = 'red';
+                statusEl.innerText = 'Пожалуйста, заполните поле.';
+                return;
+            }
+
+            statusEl.style.color = 'var(--accent)';
+            statusEl.innerText = 'Отправка...';
+
+            const { error } = await supabaseClient
+                .from('applications')
+                .insert([{ client_name: name, service_id: 1 }]);
+
+            if (error) {
+                statusEl.style.color = 'red';
+                statusEl.innerText = 'Ошибка базы данных.';
+            } else {
+                statusEl.style.color = 'green';
+                statusEl.innerText = 'Заявка принята. Менеджер свяжется с вами.';
+                document.getElementById('clientName').value = '';
+            }
+        }
+
+        loadServices();
+    </script>
+</body>
+</html>
