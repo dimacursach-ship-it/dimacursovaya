@@ -1,753 +1,534 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retail Bank — Финансовые решения</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --navy: #0a0f2e;
-            --navy-mid: #141a40;
-            --gold: #c9a84c;
-            --gold-light: #e8c96a;
-            --cream: #f5f0e8;
-            --cream-dark: #e8e0d0;
-            --white: #ffffff;
-            --muted: #8b8fa8;
-            --card-bg: rgba(255,255,255,0.04);
-            --border: rgba(201,168,76,0.2);
-            --shadow-gold: 0 0 40px rgba(201,168,76,0.15);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        html { scroll-behavior: smooth; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--navy);
-            color: var(--cream);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* ─── NOISE TEXTURE OVERLAY ─── */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.6;
-        }
-
-        /* ─── HEADER ─── */
-        header {
-            position: relative;
-            z-index: 10;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 28px 60px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .logo-mark {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-        }
-
-        .logo-text {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            color: var(--white);
-        }
-
-        .logo-text span {
-            color: var(--gold);
-        }
-
-        nav {
-            display: flex;
-            gap: 36px;
-        }
-
-        nav a {
-            color: var(--muted);
-            text-decoration: none;
-            font-size: 0.875rem;
-            font-weight: 500;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            transition: color 0.2s;
-        }
-
-        nav a:hover { color: var(--gold); }
-
-        /* ─── HERO ─── */
-        .hero {
-            position: relative;
-            z-index: 5;
-            text-align: center;
-            padding: 100px 40px 80px;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -120px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .hero-eyebrow {
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.25em;
-            text-transform: uppercase;
-            color: var(--gold);
-            margin-bottom: 20px;
-            opacity: 0;
-            animation: fadeUp 0.8s ease 0.1s forwards;
-        }
-
-        .hero h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(2.8rem, 6vw, 5rem);
-            font-weight: 900;
-            line-height: 1.1;
-            letter-spacing: -0.02em;
-            color: var(--white);
-            margin-bottom: 24px;
-            opacity: 0;
-            animation: fadeUp 0.8s ease 0.2s forwards;
-        }
-
-        .hero h1 em {
-            font-style: italic;
-            color: var(--gold);
-        }
-
-        .hero-sub {
-            max-width: 500px;
-            margin: 0 auto 50px;
-            color: var(--muted);
-            font-size: 1.05rem;
-            line-height: 1.7;
-            font-weight: 300;
-            opacity: 0;
-            animation: fadeUp 0.8s ease 0.3s forwards;
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 60px;
-            justify-content: center;
-            opacity: 0;
-            animation: fadeUp 0.8s ease 0.4s forwards;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--gold);
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--muted);
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            font-weight: 500;
-        }
-
-        /* ─── DIVIDER ─── */
-        .divider {
-            position: relative;
-            z-index: 5;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            padding: 0 60px;
-            margin-bottom: 50px;
-        }
-
-        .divider-line {
-            flex: 1;
-            height: 1px;
-            background: var(--border);
-        }
-
-        .divider-label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        /* ─── SERVICES GRID ─── */
-        #services-list {
-            position: relative;
-            z-index: 5;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            padding: 0 60px 80px;
-        }
-
-        .service-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 36px;
-            cursor: pointer;
-            transition: all 0.35s ease;
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        .service-card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .service-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .service-card:hover {
-            border-color: var(--gold);
-            transform: translateY(-6px);
-            box-shadow: var(--shadow-gold);
-        }
-
-        .service-card:hover::before { opacity: 1; }
-
-        .service-card.selected {
-            border-color: var(--gold);
-            background: rgba(201,168,76,0.08);
-        }
-
-        .card-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(201,168,76,0.1);
-            border: 1px solid rgba(201,168,76,0.3);
-            border-radius: 100px;
-            padding: 5px 14px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--gold);
-            letter-spacing: 0.05em;
-            margin-bottom: 20px;
-        }
-
-        .card-badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--gold);
-            border-radius: 50%;
-        }
-
-        .card-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--white);
-            margin-bottom: 12px;
-            line-height: 1.3;
-        }
-
-        .card-desc {
-            color: var(--muted);
-            font-size: 0.9rem;
-            line-height: 1.7;
-            font-weight: 300;
-        }
-
-        .card-rate {
-            margin-top: 28px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-        }
-
-        .rate-number {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.4rem;
-            font-weight: 700;
-            color: var(--gold);
-            line-height: 1;
-        }
-
-        .rate-suffix {
-            font-size: 0.85rem;
-            color: var(--muted);
-            font-weight: 400;
-        }
-
-        .card-select-hint {
-            margin-top: 16px;
-            font-size: 0.78rem;
-            color: var(--muted);
-            letter-spacing: 0.04em;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .service-card:hover .card-select-hint {
-            opacity: 1;
-        }
-
-        .service-card.selected .card-select-hint {
-            opacity: 1;
-            color: var(--gold);
-        }
-
-        .loading-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px;
-            color: var(--muted);
-        }
-
-        .loading-dots {
-            display: inline-flex;
-            gap: 6px;
-        }
-
-        .loading-dots span {
-            width: 8px;
-            height: 8px;
-            background: var(--gold);
-            border-radius: 50%;
-            animation: pulse 1.2s ease-in-out infinite;
-        }
-
-        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-        /* ─── APPLICATION SECTION ─── */
-        .application-section {
-            position: relative;
-            z-index: 5;
-            margin: 0 60px 80px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 60px;
-            overflow: hidden;
-        }
-
-        .application-section::before {
-            content: '';
-            position: absolute;
-            bottom: -80px;
-            right: -80px;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .app-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-            gap: 40px;
-        }
-
-        .app-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--white);
-            line-height: 1.2;
-        }
-
-        .app-title span { color: var(--gold); }
-
-        .app-subtitle {
-            color: var(--muted);
-            font-size: 0.9rem;
-            margin-top: 8px;
-            font-weight: 300;
-        }
-
-        .selected-service-info {
-            background: rgba(201,168,76,0.08);
-            border: 1px solid rgba(201,168,76,0.3);
-            border-radius: 12px;
-            padding: 16px 24px;
-            min-width: 240px;
-            flex-shrink: 0;
-        }
-
-        .selected-service-info .label {
-            font-size: 0.7rem;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
-
-        .selected-service-info .value {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--gold);
-        }
-
-        .form-row {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .input-group {
-            flex: 1;
-            min-width: 220px;
-        }
-
-        .input-label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 10px;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 16px 20px;
-            color: var(--white);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 1rem;
-            font-weight: 400;
-            outline: none;
-            transition: border-color 0.2s, background 0.2s;
-        }
-
-        input[type="text"]::placeholder {
-            color: rgba(139,143,168,0.5);
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--gold);
-            background: rgba(201,168,76,0.05);
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, var(--gold), var(--gold-light));
-            color: var(--navy);
-            border: none;
-            padding: 16px 40px;
-            border-radius: 10px;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 700;
-            font-size: 0.9rem;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            cursor: pointer;
-            transition: all 0.25s;
-            white-space: nowrap;
-            align-self: flex-end;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(201,168,76,0.4);
-        }
-
-        .btn-submit:active { transform: translateY(0); }
-        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-        #status {
-            margin-top: 20px;
-            min-height: 24px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-success {
-            color: #4caf88;
-        }
-
-        .status-error {
-            color: #e05e5e;
-        }
-
-        .status-loading {
-            color: var(--muted);
-        }
-
-        /* ─── FOOTER ─── */
-        footer {
-            position: relative;
-            z-index: 5;
-            border-top: 1px solid var(--border);
-            padding: 30px 60px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--muted);
-            font-size: 0.8rem;
-        }
-
-        /* ─── ANIMATIONS ─── */
-        @keyframes fadeUp {
-            to { opacity: 1; transform: translateY(0); }
-            from { opacity: 0; transform: translateY(24px); }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1); }
-        }
-
-        /* ─── RESPONSIVE ─── */
-        @media (max-width: 768px) {
-            header { padding: 20px 24px; }
-            nav { display: none; }
-            .hero { padding: 60px 24px 50px; }
-            .hero-stats { gap: 30px; }
-            #services-list { padding: 0 24px 50px; }
-            .application-section { margin: 0 24px 50px; padding: 32px 24px; }
-            .app-header { flex-direction: column; }
-            .selected-service-info { width: 100%; }
-            footer { padding: 24px; flex-direction: column; gap: 8px; text-align: center; }
-            .divider { padding: 0 24px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetailBank — Финансовые решения</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#07091a;--navy2:#0d1130;--navy3:#141840;
+  --gold:#c8a84b;--gold-lt:#e2c97e;--gold-dim:rgba(200,168,75,0.14);
+  --cream:#f0e9d6;--muted:#6b7199;
+  --border:rgba(200,168,75,0.18);--borderd:rgba(255,255,255,0.07);
+  --red:#c0504a;--green:#4caf88;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Syne',sans-serif;background:var(--navy);color:var(--cream);overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;z-index:999;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");opacity:.5}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;
+  justify-content:space-between;padding:20px 56px;
+  backdrop-filter:blur(20px);background:rgba(7,9,26,.78);
+  border-bottom:1px solid var(--borderd)}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav-hex{width:34px;height:34px;background:linear-gradient(135deg,var(--gold),var(--gold-lt));
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);flex-shrink:0}
+.nav-wm{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:700;color:#fff}
+.nav-wm b{color:var(--gold)}
+.nav-links{display:flex;gap:36px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:.78rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+.nav-cta{background:var(--gold);color:var(--navy);border:none;padding:10px 24px;
+  border-radius:6px;font-family:'Syne',sans-serif;font-size:.78rem;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:opacity .2s}
+.nav-cta:hover{opacity:.85}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;padding:120px 40px 80px;position:relative;overflow:hidden}
+.hero-glow{position:absolute;top:5%;left:50%;transform:translateX(-50%);width:800px;height:500px;
+  background:radial-gradient(ellipse,rgba(200,168,75,.1) 0%,transparent 65%);pointer-events:none}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);
+  border-radius:100px;padding:6px 18px;font-size:.72rem;font-weight:600;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:32px;animation:fadeUp .7s ease .1s both}
+.tag-dot{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:blink 2s ease infinite}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(3.2rem,7vw,6.5rem);font-weight:700;
+  line-height:1.05;color:#fff;margin-bottom:28px;animation:fadeUp .7s ease .2s both}
+.hero h1 em{color:var(--gold);font-style:italic}
+.hero-desc{max-width:520px;color:var(--muted);font-size:1rem;line-height:1.75;font-weight:400;
+  margin-bottom:52px;animation:fadeUp .7s ease .3s both}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:80px;animation:fadeUp .7s ease .4s both}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:var(--navy);border:none;
+  padding:16px 36px;border-radius:8px;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:transform .2s,box-shadow .2s;
+  text-decoration:none;display:inline-block}
+.btn-gold:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(200,168,75,.4)}
+.btn-ghost{background:transparent;color:var(--cream);border:1px solid var(--borderd);
+  padding:16px 36px;border-radius:8px;font-family:'Syne',sans-serif;font-size:.85rem;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:border-color .2s,color .2s;
+  text-decoration:none;display:inline-block}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.kpis{display:flex;border:1px solid var(--borderd);border-radius:14px;overflow:hidden;animation:fadeUp .7s ease .5s both}
+.kpi{padding:24px 40px;text-align:center;border-right:1px solid var(--borderd)}
+.kpi:last-child{border-right:none}
+.kpi-v{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:700;color:var(--gold);display:block;line-height:1}
+.kpi-l{font-size:.7rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:6px;display:block}
+.scroll-hint{position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);
+  font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;animation:fadeUp 1s ease 1s both}
+.scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--gold),transparent);
+  animation:scrollln 1.8s ease-in-out infinite}
+
+/* SECTION COMMON */
+.sec-label{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.sec-line{width:32px;height:2px;background:var(--gold)}
+.sec-tag{font-size:.7rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3.2rem);
+  font-weight:700;color:#fff;line-height:1.2;margin-bottom:8px}
+.sec-title em{font-style:italic;color:var(--gold)}
+.sec-sub{color:var(--muted);font-size:.9rem;line-height:1.7;font-weight:400;max-width:420px}
+
+/* SERVICES */
+#services{padding:100px 56px;background:linear-gradient(180deg,var(--navy) 0%,var(--navy2) 100%)}
+.svc-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:40px;gap:40px}
+.filter-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:40px}
+.ftab{background:transparent;border:1px solid var(--borderd);color:var(--muted);padding:8px 20px;
+  border-radius:100px;font-family:'Syne',sans-serif;font-size:.75rem;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.ftab:hover{border-color:var(--gold);color:var(--gold)}
+.ftab.on{background:var(--gold-dim);border-color:var(--gold);color:var(--gold-lt)}
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
+.svc-card{background:rgba(255,255,255,.03);border:1px solid var(--borderd);border-radius:16px;
+  padding:32px;cursor:pointer;position:relative;overflow:hidden;
+  opacity:0;transform:translateY(24px);
+  transition:opacity .5s ease,transform .5s ease,border-color .3s,box-shadow .3s,background .3s}
+.svc-card.in{opacity:1;transform:translateY(0)}
+.svc-card::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(200,168,75,.07) 0%,transparent 60%);opacity:0;transition:opacity .3s}
+.svc-card:hover,.svc-card.picked{border-color:var(--gold);transform:translateY(-6px)!important;
+  box-shadow:0 20px 48px rgba(200,168,75,.12)}
+.svc-card:hover::before,.svc-card.picked::before{opacity:1}
+.svc-card.picked{background:rgba(200,168,75,.06)}
+.svc-icon{width:48px;height:48px;border-radius:12px;background:var(--gold-dim);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:20px}
+.svc-cat{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.svc-name{font-family:'Cormorant Garamond',serif;font-size:1.45rem;font-weight:700;color:#fff;line-height:1.25;margin-bottom:10px}
+.svc-desc{color:var(--muted);font-size:.85rem;line-height:1.7;font-weight:400;margin-bottom:24px}
+.svc-foot{display:flex;justify-content:space-between;align-items:center;padding-top:20px;border-top:1px solid var(--borderd)}
+.svc-rate-n{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:var(--gold);line-height:1}
+.svc-rate-u{font-size:.75rem;color:var(--muted);font-weight:400}
+.svc-badge{display:inline-block;background:var(--gold-dim);border:1px solid var(--border);
+  border-radius:6px;padding:4px 12px;font-size:.7rem;font-weight:700;color:var(--gold-lt);letter-spacing:.06em}
+.svc-pick{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:50%;
+  border:1px solid var(--borderd);display:flex;align-items:center;justify-content:center;
+  font-size:.7rem;color:var(--muted);transition:all .2s}
+.svc-card.picked .svc-pick{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.svc-empty{grid-column:1/-1;text-align:center;padding:80px;color:var(--muted);font-size:.9rem}
+.dots{display:inline-flex;gap:6px}
+.dots span{width:8px;height:8px;background:var(--gold);border-radius:50%;animation:blink 1.2s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+
+/* WHY */
+#why{padding:100px 56px;background:var(--navy2);border-top:1px solid var(--borderd)}
+.why-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:60px}
+.why-features{display:flex;flex-direction:column;gap:20px}
+.why-ft{display:flex;gap:20px;align-items:flex-start;padding:22px;border-radius:12px;
+  border:1px solid transparent;transition:border-color .3s,background .3s}
+.why-ft:hover{border-color:var(--borderd);background:rgba(255,255,255,.02)}
+.why-ico{width:44px;height:44px;flex-shrink:0;border-radius:10px;background:var(--gold-dim);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+.why-ft-t{font-size:1rem;font-weight:700;color:#fff;margin-bottom:5px}
+.why-ft-d{font-size:.85rem;color:var(--muted);line-height:1.65;font-weight:400}
+.why-visual{display:flex;flex-direction:column;gap:18px}
+.wstat{background:rgba(255,255,255,.03);border:1px solid var(--borderd);border-radius:16px;padding:30px 36px}
+.wstat.gld{border-color:var(--border)}
+.wstat-n{font-family:'Cormorant Garamond',serif;font-size:3.6rem;font-weight:700;color:var(--gold);line-height:1}
+.wstat-l{font-size:.8rem;color:var(--muted);margin-top:8px;font-weight:400}
+
+/* APPLY */
+#apply{padding:100px 56px;background:linear-gradient(180deg,var(--navy2) 0%,var(--navy) 100%);border-top:1px solid var(--borderd)}
+.apply-wrap{display:grid;grid-template-columns:1fr 480px;gap:64px;align-items:start;margin-top:60px}
+.apply-info{display:flex;flex-direction:column;gap:32px}
+.sel-card{background:var(--gold-dim);border:1px solid var(--border);border-radius:14px;padding:24px 28px}
+.sel-lbl{font-size:.65rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.sel-nm{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold-lt)}
+.sel-nm.empty{color:var(--muted);font-style:italic;font-size:1rem}
+.sel-rt{color:var(--muted);font-size:.82rem;margin-top:6px}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{display:flex;gap:16px;padding-bottom:24px;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:15px;top:32px;bottom:0;width:1px;background:var(--borderd)}
+.step-n{width:32px;height:32px;flex-shrink:0;border-radius:50%;border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;
+  color:var(--gold);background:var(--gold-dim)}
+.step-t{font-size:.9rem;font-weight:600;color:#fff}
+.step-d{font-size:.8rem;color:var(--muted);margin-top:3px}
+
+/* Form card */
+.fcard{background:rgba(255,255,255,.03);border:1px solid var(--borderd);border-radius:20px;padding:40px}
+.ftitle{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;color:#fff;margin-bottom:28px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.field input,.field select,.field textarea{width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px 18px;
+  color:var(--cream);font-family:'Syne',sans-serif;font-size:.92rem;font-weight:400;
+  outline:none;transition:border-color .2s,background .2s;appearance:none}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7199' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+.field select option{background:var(--navy2);color:var(--cream)}
+.field textarea{resize:vertical;min-height:90px}
+.field input::placeholder,.field textarea::placeholder{color:rgba(107,113,153,.5)}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);background:rgba(200,168,75,.05)}
+.frow{display:flex;gap:14px}
+.frow .field{flex:1}
+.fdiv{height:1px;background:var(--borderd);margin:22px 0}
+.check{display:flex;gap:12px;align-items:flex-start;margin-bottom:22px}
+.check input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:var(--gold)}
+.check label{font-size:.78rem;color:var(--muted);line-height:1.55;cursor:pointer;letter-spacing:0;text-transform:none}
+.check label a{color:var(--gold);text-decoration:none}
+.btn-sub{width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-lt));color:var(--navy);border:none;
+  padding:17px;border-radius:10px;font-family:'Syne',sans-serif;font-size:.88rem;font-weight:800;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:transform .2s,box-shadow .2s,opacity .2s}
+.btn-sub:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 10px 28px rgba(200,168,75,.4)}
+.btn-sub:disabled{opacity:.45;cursor:not-allowed}
+#fstatus{margin-top:14px;min-height:20px;font-size:.82rem;font-weight:500;display:flex;align-items:center;gap:8px}
+.s-ok{color:var(--green)}.s-err{color:var(--red)}.s-wait{color:var(--muted)}
+.success-ov{display:none;flex-direction:column;align-items:center;text-align:center;padding:24px 0}
+.success-ov.show{display:flex}
+.s-ico{width:72px;height:72px;border-radius:50%;background:rgba(76,175,136,.15);border:2px solid var(--green);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:24px;animation:scaleIn .4s ease}
+.success-ov h3{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;color:#fff;margin-bottom:10px}
+.success-ov p{color:var(--muted);font-size:.88rem;line-height:1.65}
+.btn-reset{margin-top:28px;background:transparent;border:1px solid var(--border);color:var(--gold);
+  padding:12px 28px;border-radius:8px;font-family:'Syne',sans-serif;font-size:.8rem;font-weight:600;
+  cursor:pointer;letter-spacing:.08em;transition:border-color .2s}
+.btn-reset:hover{border-color:var(--gold)}
+
+/* REVIEWS */
+#reviews{padding:100px 56px;background:var(--navy2);border-top:1px solid var(--borderd)}
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-top:56px}
+.rev-card{background:rgba(255,255,255,.02);border:1px solid var(--borderd);border-radius:14px;padding:28px;transition:border-color .3s}
+.rev-card:hover{border-color:var(--border)}
+.rev-stars{color:var(--gold);font-size:.9rem;margin-bottom:14px}
+.rev-text{font-size:.88rem;color:var(--cream);line-height:1.7;font-weight:400;margin-bottom:20px;font-style:italic}
+.rev-auth{display:flex;align-items:center;gap:12px}
+.rev-av{width:36px;height:36px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:var(--gold)}
+.rev-nm{font-size:.85rem;font-weight:600;color:#fff}
+.rev-dt{font-size:.72rem;color:var(--muted)}
+
+/* FOOTER */
+footer{padding:40px 56px;border-top:1px solid var(--borderd);display:flex;justify-content:space-between;
+  align-items:center;color:var(--muted);font-size:.75rem;flex-wrap:wrap;gap:16px}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--gold)}
+.footer-links{display:flex;gap:24px}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes scrollln{0%,100%{opacity:0;transform:scaleY(0);transform-origin:top}50%{opacity:1;transform:scaleY(1)}}
+@keyframes scaleIn{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  nav{padding:18px 24px}.nav-links{display:none}
+  #services,#why,#apply,#reviews,footer{padding-left:24px;padding-right:24px}
+  .why-grid{grid-template-columns:1fr}
+  .apply-wrap{grid-template-columns:1fr}
+  .kpis{flex-wrap:wrap}
+  .kpi{padding:16px 24px}
+}
+@media(max-width:560px){.frow{flex-direction:column}.hero{padding:100px 24px 60px}}
+</style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">
-            <div class="logo-mark"></div>
-            <span class="logo-text">Retail<span>Bank</span></span>
-        </div>
-        <nav>
-            <a href="#">Услуги</a>
-            <a href="#">Клиентам</a>
-            <a href="#">О банке</a>
-            <a href="#">Контакты</a>
-        </nav>
-    </header>
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="nav-hex"></div>
+    <span class="nav-wm">Retail<b>Bank</b></span>
+  </a>
+  <div class="nav-links">
+    <a href="#services">Продукты</a>
+    <a href="#why">О банке</a>
+    <a href="#reviews">Отзывы</a>
+    <a href="#apply">Заявка</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('apply').scrollIntoView({behavior:'smooth'})">Открыть счёт</button>
+</nav>
 
-    <section class="hero">
-        <p class="hero-eyebrow">Финансовые решения нового уровня</p>
-        <h1>Управляйте деньгами<br>с <em>умом</em> и выгодой</h1>
-        <p class="hero-sub">Выберите банковский продукт, который подходит именно вам — и оставьте заявку в одно касание.</p>
-        <div class="hero-stats">
-            <div class="stat">
-                <span class="stat-value">3</span>
-                <span class="stat-label">Продукта</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">24/7</span>
-                <span class="stat-label">Поддержка</span>
-            </div>
-            <div class="stat">
-                <span class="stat-value">0₽</span>
-                <span class="stat-label">Обслуживание</span>
-            </div>
-        </div>
-    </section>
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <span class="hero-tag"><span class="tag-dot"></span>Лицензия ЦБ РФ · Работаем с 2010</span>
+  <h1>Банк, который<br>работает <em>для вас</em></h1>
+  <p class="hero-desc">Кредиты, вклады и карты с прозрачными условиями. Без скрытых комиссий и бюрократии — только выгодные решения.</p>
+  <div class="hero-actions">
+    <a class="btn-gold" href="#services">Выбрать продукт</a>
+    <a class="btn-ghost" href="#why">Узнать больше</a>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span class="kpi-v">120</span><span class="kpi-l">дней без %</span></div>
+    <div class="kpi"><span class="kpi-v">16%</span><span class="kpi-l">по вкладам</span></div>
+    <div class="kpi"><span class="kpi-v">12,5%</span><span class="kpi-l">по кредитам</span></div>
+    <div class="kpi"><span class="kpi-v">24/7</span><span class="kpi-l">поддержка</span></div>
+  </div>
+  <div class="scroll-hint"><span>Прокрутите вниз</span><div class="scroll-line"></div></div>
+</div>
 
-    <div class="divider">
-        <div class="divider-line"></div>
-        <span class="divider-label">Наши продукты</span>
-        <div class="divider-line"></div>
+<!-- SERVICES -->
+<section id="services">
+  <div class="svc-head">
+    <div>
+      <div class="sec-label"><div class="sec-line"></div><span class="sec-tag">Наши продукты</span></div>
+      <h2 class="sec-title">Выберите <em>нужный</em><br>продукт</h2>
+    </div>
+    <p class="sec-sub">Нажмите на карточку — продукт автоматически появится в форме заявки ниже.</p>
+  </div>
+  <div class="filter-tabs" id="filterTabs">
+    <button class="ftab on" data-cat="all" onclick="filterBy('all')">Все</button>
+  </div>
+  <div class="svc-grid" id="services-list">
+    <div class="svc-empty"><div class="dots"><span></span><span></span><span></span></div><p style="margin-top:18px">Загружаем продукты...</p></div>
+  </div>
+</section>
+
+<!-- WHY -->
+<section id="why">
+  <div class="sec-label"><div class="sec-line"></div><span class="sec-tag">Почему RetailBank</span></div>
+  <h2 class="sec-title">Надёжность,<br>проверенная <em>временем</em></h2>
+  <div class="why-grid">
+    <div class="why-features">
+      <div class="why-ft"><div class="why-ico">🔐</div><div><div class="why-ft-t">Полная безопасность</div><div class="why-ft-d">Все вклады застрахованы АСВ до 1,4 млн ₽. Двухфакторная аутентификация и мониторинг транзакций 24/7.</div></div></div>
+      <div class="why-ft"><div class="why-ico">⚡</div><div><div class="why-ft-t">Мгновенное решение</div><div class="why-ft-d">Одобрение кредита за 2 минуты онлайн. Деньги на счёт без визита в отделение.</div></div></div>
+      <div class="why-ft"><div class="why-ico">💎</div><div><div class="why-ft-t">Прозрачные условия</div><div class="why-ft-d">Никаких скрытых комиссий. Полная стоимость кредита — в договоре, до подписания.</div></div></div>
+      <div class="why-ft"><div class="why-ico">🤝</div><div><div class="why-ft-t">Персональный менеджер</div><div class="why-ft-d">Для каждого клиента — свой специалист. Ответит на вопросы и подберёт выгодный продукт.</div></div></div>
+    </div>
+    <div class="why-visual">
+      <div class="wstat gld"><div class="wstat-n">14+</div><div class="wstat-l">лет на рынке розничных финансов</div></div>
+      <div class="wstat"><div class="wstat-n">280k</div><div class="wstat-l">довольных клиентов по всей России</div></div>
+      <div class="wstat"><div class="wstat-n">4.8 ★</div><div class="wstat-l">средняя оценка в App Store и Google Play</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- APPLY -->
+<section id="apply">
+  <div class="sec-label"><div class="sec-line"></div><span class="sec-tag">Заявка</span></div>
+  <h2 class="sec-title">Оставьте <em>заявку</em><br>прямо сейчас</h2>
+  <div class="apply-wrap">
+    <div class="apply-info">
+      <div class="sel-card">
+        <div class="sel-lbl">Выбранный продукт</div>
+        <div class="sel-nm empty" id="selName">Выберите продукт выше ↑</div>
+        <div class="sel-rt" id="selRate"></div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-n">1</div><div><div class="step-t">Выберите продукт</div><div class="step-d">Нажмите на карточку в блоке «Продукты»</div></div></div>
+        <div class="step"><div class="step-n">2</div><div><div class="step-t">Заполните форму</div><div class="step-d">Укажите имя, телефон и email</div></div></div>
+        <div class="step"><div class="step-n">3</div><div><div class="step-t">Получите звонок</div><div class="step-d">Менеджер свяжется в течение рабочего дня</div></div></div>
+      </div>
     </div>
 
-    <div id="services-list">
-        <div class="loading-state">
-            <div class="loading-dots">
-                <span></span><span></span><span></span>
-            </div>
-            <p style="margin-top:16px; color: var(--muted); font-size:0.9rem;">Загружаем продукты...</p>
+    <div class="fcard">
+      <div class="success-ov" id="successOv">
+        <div class="s-ico">✓</div>
+        <h3>Заявка принята!</h3>
+        <p>Наш менеджер свяжется с вами в течение рабочего дня. Спасибо за доверие к RetailBank.</p>
+        <button class="btn-reset" onclick="resetForm()">Оставить ещё одну заявку</button>
+      </div>
+      <div id="formBody">
+        <h3 class="ftitle">Ваши данные</h3>
+        <div class="field"><label for="fName">Полное имя *</label><input type="text" id="fName" placeholder="Иванов Иван Иванович"></div>
+        <div class="frow">
+          <div class="field"><label for="fPhone">Телефон *</label><input type="text" id="fPhone" placeholder="+7 (900) 000-00-00"></div>
+          <div class="field"><label for="fEmail">Email</label><input type="text" id="fEmail" placeholder="ivan@example.com"></div>
         </div>
+        <div class="field"><label for="fCity">Город</label><input type="text" id="fCity" placeholder="Москва"></div>
+        <div class="fdiv"></div>
+        <div class="field"><label for="fComment">Комментарий</label><textarea id="fComment" placeholder="Дополнительные пожелания..."></textarea></div>
+        <div class="check">
+          <input type="checkbox" id="fConsent">
+          <label for="fConsent">Я согласен на обработку <a href="#">персональных данных</a> и ознакомлен с <a href="#">политикой конфиденциальности</a></label>
+        </div>
+        <button class="btn-sub" id="submitBtn" onclick="submitApp()">Отправить заявку →</button>
+        <div id="fstatus"></div>
+      </div>
     </div>
+  </div>
+</section>
 
-    <section class="application-section">
-        <div class="app-header">
-            <div>
-                <h2 class="app-title">Оставить <span>заявку</span></h2>
-                <p class="app-subtitle">Менеджер свяжется с вами в течение рабочего дня</p>
-            </div>
-            <div class="selected-service-info">
-                <div class="label">Выбранный продукт</div>
-                <div class="value" id="selectedServiceName">Не выбран</div>
-            </div>
-        </div>
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="sec-label"><div class="sec-line"></div><span class="sec-tag">Отзывы клиентов</span></div>
+  <h2 class="sec-title">Что говорят<br>наши <em>клиенты</em></h2>
+  <div class="rev-grid">
+    <div class="rev-card">
+      <div class="rev-stars">★★★★★</div>
+      <p class="rev-text">«Оформил кредит за 3 минуты прямо с телефона. Никаких справок, никаких очередей — деньги пришли в тот же день.»</p>
+      <div class="rev-auth"><div class="rev-av">АК</div><div><div class="rev-nm">Алексей К.</div><div class="rev-dt">Апрель 2025</div></div></div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-stars">★★★★★</div>
+      <p class="rev-text">«Вклад "Стабильный" — лучшее, что я выбирала. 16% годовых с ежемесячной капитализацией. Уже третий год держу деньги здесь.»</p>
+      <div class="rev-auth"><div class="rev-av">МС</div><div><div class="rev-nm">Марина С.</div><div class="rev-dt">Март 2025</div></div></div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-stars">★★★★☆</div>
+      <p class="rev-text">«Карта Zero закрыла все мои потребности. 120 дней без процентов — это реально выручает при крупных покупках.»</p>
+      <div class="rev-auth"><div class="rev-av">ДН</div><div><div class="rev-nm">Дмитрий Н.</div><div class="rev-dt">Февраль 2025</div></div></div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-stars">★★★★★</div>
+      <p class="rev-text">«Менеджер перезвонил через час после заявки и всё объяснил. Очень профессиональный подход, рекомендую всем друзьям.»</p>
+      <div class="rev-auth"><div class="rev-av">ЕВ</div><div><div class="rev-nm">Елена В.</div><div class="rev-dt">Январь 2025</div></div></div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-stars">★★★★★</div>
+      <p class="rev-text">«Ипотека под 8,5% — лучшее предложение, что я нашёл на рынке. Одобрили за 2 дня, без лишней бумажной волокиты.»</p>
+      <div class="rev-auth"><div class="rev-av">ПМ</div><div><div class="rev-nm">Павел М.</div><div class="rev-dt">Декабрь 2024</div></div></div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-stars">★★★★☆</div>
+      <p class="rev-text">«Интерфейс приложения удобный, переводы мгновенные. Немного долго ждал карту — 5 дней, но в целом доволен.»</p>
+      <div class="rev-auth"><div class="rev-av">НЛ</div><div><div class="rev-nm">Никита Л.</div><div class="rev-dt">Ноябрь 2024</div></div></div>
+    </div>
+  </div>
+</section>
 
-        <div class="form-row">
-            <div class="input-group">
-                <label class="input-label" for="clientName">Ваше полное имя</label>
-                <input type="text" id="clientName" placeholder="Иванов Иван Иванович">
-            </div>
-            <button class="btn-submit" onclick="submitApplication()">Отправить заявку →</button>
-        </div>
+<footer>
+  <span>© 2025 RetailBank · Лицензия ЦБ РФ №3245</span>
+  <div class="footer-links">
+    <a href="#">Конфиденциальность</a>
+    <a href="#">Тарифы</a>
+    <a href="#">Реквизиты</a>
+    <a href="#">Контакты</a>
+  </div>
+  <span>Все вклады застрахованы АСВ</span>
+</footer>
 
-        <div id="status"></div>
-    </section>
+<script>
+/* ─── Supabase ─── */
+const SURL = 'https://kskbewcuerghaapfcwoy.supabase.co';
+const SKEY = 'sb_publishable_n6ldlv8Cok0dcsYoJqnbag_QAUcopCI';
+const db = supabase.createClient(SURL, SKEY);
 
-    <footer>
-        <span>© 2025 RetailBank. Лицензия ЦБ РФ №0000</span>
-        <span>Все данные защищены · Политика конфиденциальности</span>
-    </footer>
+/* ─── Fallback demo (показывается если БД недоступна или пуста) ─── */
+const DEMO = [
+  {id:1,name:'Кредитная карта "Zero"',   description:'0% на покупки до 120 дней. Кэшбэк до 5% в любимых категориях.', interest_rate:24.9},
+  {id:2,name:'Вклад "Стабильный"',        description:'Ежемесячная капитализация процентов. Гибкое пополнение в любое время.', interest_rate:16.0},
+  {id:3,name:'Потребительский кредит',     description:'На любые цели без залога и поручителей. Решение онлайн за 2 минуты.', interest_rate:12.5},
+];
 
-    <script>
-        const SUPABASE_URL = 'https://kskbewcuerghaapfcwoy.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_n6ldlv8Cok0dcsYoJqnbag_QAUcopCI';
+/* ─── State ─── */
+let pickedId=null, pickedName='', pickedRate=null, allSvc=[];
 
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+/* ─── Helpers ─── */
+function esc(s){const d=document.createElement('div');d.appendChild(document.createTextNode(s||''));return d.innerHTML}
+function catOf(n){if(/карт/i.test(n))return'Карты';if(/вклад|накопи/i.test(n))return'Вклады';if(/ипотек/i.test(n))return'Ипотека';if(/кредит/i.test(n))return'Кредиты';if(/инвест/i.test(n))return'Инвестиции';return'Другое'}
+function iconOf(n){if(/карт/i.test(n))return'💳';if(/вклад/i.test(n))return'🏦';if(/ипотек/i.test(n))return'🏠';if(/инвест/i.test(n))return'📈';return'💰'}
+function v(id){const e=document.getElementById(id);return e?e.value.trim():''}
+function setStatus(msg,cls){const e=document.getElementById('fstatus');e.textContent=msg;e.className=cls}
 
-        let selectedServiceId = null;
-        let selectedServiceName = 'Не выбран';
+/* ─── Load ─── */
+async function loadServices(){
+  const {data,error}=await db.from('services').select('*').order('id');
+  allSvc=(error||!data||!data.length)?DEMO:data;
+  if(error)console.warn('Supabase:',error.message,'→ demo data shown');
+  buildFilters();renderSvc(allSvc);
+}
 
-        async function loadServices() {
-            const list = document.getElementById('services-list');
-            const { data, error } = await supabaseClient.from('services').select('*');
+function buildFilters(){
+  const cats=['all',...new Set(allSvc.map(s=>s.category||catOf(s.name)))];
+  document.getElementById('filterTabs').innerHTML=cats.map(c=>
+    `<button class="ftab${c==='all'?' on':''}" data-cat="${c}" onclick="filterBy('${c}')">${c==='all'?'Все':c}</button>`
+  ).join('');
+}
 
-            if (error || !data) {
-                list.innerHTML = '<div class="loading-state"><p style="color:#e05e5e">Ошибка загрузки данных. Проверьте соединение.</p></div>';
-                return;
-            }
+function filterBy(cat){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.toggle('on',t.dataset.cat===cat));
+  renderSvc(cat==='all'?allSvc:allSvc.filter(s=>(s.category||catOf(s.name))===cat));
+}
 
-            list.innerHTML = data.map((s, i) => `
-                <div class="service-card" id="card-${s.id}" onclick="selectService(${s.id}, '${escapeHtml(s.name)}')" style="transition-delay:${i * 0.1}s">
-                    <div class="card-badge">Ставка ${s.interest_rate}% годовых</div>
-                    <div class="card-name">${escapeHtml(s.name)}</div>
-                    <div class="card-desc">${escapeHtml(s.description || '')}</div>
-                    <div class="card-rate">
-                        <span class="rate-number">${s.interest_rate}</span>
-                        <span class="rate-suffix">% / год</span>
-                    </div>
-                    <div class="card-select-hint">↑ Нажмите, чтобы выбрать этот продукт</div>
-                </div>
-            `).join('');
+function renderSvc(list){
+  const g=document.getElementById('services-list');
+  if(!list.length){g.innerHTML='<div class="svc-empty"><p>Нет продуктов.</p></div>';return}
+  g.innerHTML=list.map((s,i)=>{
+    const cat=s.category||catOf(s.name);
+    const picked=s.id===pickedId;
+    return`<div class="svc-card${picked?' picked':''}" id="svc-${s.id}"
+      onclick="pickSvc(${s.id},'${esc(s.name)}',${s.interest_rate})"
+      style="transition-delay:${i*.07}s">
+      <div class="svc-pick">${picked?'✓':'○'}</div>
+      <div class="svc-icon">${iconOf(s.name)}</div>
+      <div class="svc-cat">${cat}</div>
+      <div class="svc-name">${esc(s.name)}</div>
+      <div class="svc-desc">${esc(s.description)}</div>
+      <div class="svc-foot">
+        <div class="svc-rate"><span class="svc-rate-n">${s.interest_rate}</span><span class="svc-rate-u">% / год</span></div>
+        <span class="svc-badge">${cat}</span>
+      </div>
+    </div>`;
+  }).join('');
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.svc-card').forEach((c,i)=>setTimeout(()=>c.classList.add('in'),i*70));
+  });
+}
 
-            // Animate cards in
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.service-card').forEach((card, i) => {
-                    setTimeout(() => card.classList.add('visible'), i * 100);
-                });
-            });
-        }
+function pickSvc(id,name,rate){
+  pickedId=id; pickedName=name; pickedRate=rate;
+  document.querySelectorAll('.svc-card').forEach(c=>{
+    const m=c.id===`svc-${id}`;
+    c.classList.toggle('picked',m);
+    const p=c.querySelector('.svc-pick');
+    if(p)p.textContent=m?'✓':'○';
+  });
+  const nm=document.getElementById('selName');
+  nm.textContent=name; nm.classList.remove('empty');
+  document.getElementById('selRate').textContent=`Ставка от ${rate}% годовых`;
+  // smooth scroll to form on mobile
+  if(window.innerWidth<760)
+    document.getElementById('apply').scrollIntoView({behavior:'smooth'});
+}
 
-        function selectService(id, name) {
-            selectedServiceId = id;
-            selectedServiceName = name;
-            document.getElementById('selectedServiceName').textContent = name;
+/* ─── Submit ─── */
+async function submitApp(){
+  const name=v('fName'), phone=v('fPhone');
+  if(!name)   return setStatus('⚠ Введите полное имя','s-err');
+  if(!phone)  return setStatus('⚠ Введите номер телефона','s-err');
+  if(!pickedId) return setStatus('⚠ Выберите продукт выше','s-err');
+  if(!document.getElementById('fConsent').checked)
+              return setStatus('⚠ Подтвердите согласие на обработку данных','s-err');
 
-            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-            const card = document.getElementById(`card-${id}`);
-            if (card) {
-                card.classList.add('selected');
-                card.querySelector('.card-select-hint').textContent = '✓ Выбрано';
-            }
-        }
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; setStatus('Отправляем заявку...','s-wait');
 
-        async function submitApplication() {
-            const name = document.getElementById('clientName').value.trim();
-            const statusEl = document.getElementById('status');
+  const {error}=await db.from('applications').insert([{
+    client_name: name,
+    service_id:  pickedId,
+    status:      'Pending',
+  }]);
 
-            if (!name) {
-                statusEl.className = 'status-error';
-                statusEl.innerHTML = '⚠ Пожалуйста, введите ваше полное имя.';
-                return;
-            }
+  btn.disabled=false;
+  if(error){setStatus('✕ Ошибка: '+error.message,'s-err');return;}
+  setStatus('','');
+  document.getElementById('formBody').style.display='none';
+  document.getElementById('successOv').classList.add('show');
+}
 
-            if (!selectedServiceId) {
-                statusEl.className = 'status-error';
-                statusEl.innerHTML = '⚠ Выберите банковский продукт выше.';
-                return;
-            }
+function resetForm(){
+  pickedId=null; pickedName=''; pickedRate=null;
+  document.querySelectorAll('.svc-card').forEach(c=>{
+    c.classList.remove('picked');
+    const p=c.querySelector('.svc-pick');if(p)p.textContent='○';
+  });
+  const nm=document.getElementById('selName');
+  nm.textContent='Выберите продукт выше ↑'; nm.classList.add('empty');
+  document.getElementById('selRate').textContent='';
+  ['fName','fPhone','fEmail','fCity','fComment'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('fConsent').checked=false;
+  document.getElementById('successOv').classList.remove('show');
+  document.getElementById('formBody').style.display='';
+}
 
-            statusEl.className = 'status-loading';
-            statusEl.innerHTML = '<span>Отправляем заявку...</span>';
-
-            const btn = document.querySelector('.btn-submit');
-            btn.disabled = true;
-
-            const { error } = await supabaseClient
-                .from('applications')
-                .insert([{ client_name: name, service_id: selectedServiceId }]);
-
-            btn.disabled = false;
-
-            if (error) {
-                statusEl.className = 'status-error';
-                statusEl.innerHTML = '✕ Ошибка базы данных. Попробуйте позже.';
-            } else {
-                statusEl.className = 'status-success';
-                statusEl.innerHTML = '✓ Заявка принята! Наш менеджер свяжется с вами в ближайшее время.';
-                document.getElementById('clientName').value = '';
-                selectedServiceId = null;
-                selectedServiceName = 'Не выбран';
-                document.getElementById('selectedServiceName').textContent = 'Не выбран';
-                document.querySelectorAll('.service-card').forEach(c => {
-                    c.classList.remove('selected');
-                    const hint = c.querySelector('.card-select-hint');
-                    if (hint) hint.textContent = '↑ Нажмите, чтобы выбрать этот продукт';
-                });
-            }
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.appendChild(document.createTextNode(str));
-            return div.innerHTML;
-        }
-
-        loadServices();
-    </script>
+loadServices();
+</script>
 </body>
 </html>
